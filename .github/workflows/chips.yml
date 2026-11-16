@@ -1,0 +1,38 @@
+name: chips
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+permissions:
+  contents: write
+concurrency:
+  group: chips
+  cancel-in-progress: false
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas requests
+      - name: Download
+        run: python fetch_chips.py --shard ${{ matrix.shard }} --shards 12 --max-minutes 18
+      - name: Commit
+        run: |
+          git config user.name "chips-bot"
+          git config user.email "chips-bot@users.noreply.github.com"
+          git add data || true
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -m "chips shard ${{ matrix.shard }}"
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            git pull --rebase -X theirs origin main && git push origin HEAD:main && exit 0
+            sleep $((RANDOM % 20 + 5))
+          done
+          exit 1
