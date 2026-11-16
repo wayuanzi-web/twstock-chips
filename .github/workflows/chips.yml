@@ -23,7 +23,7 @@ jobs:
           python-version: "3.12"
       - run: pip install pandas requests
       - name: Download
-        run: python fetch_chips.py --shard ${{ matrix.shard }} --shards 12 --max-minutes 18
+        run: python fetch_chips.py --shard ${{ matrix.shard }} --shards 12 --max-minutes 18 --kinds daytrading
       - name: Commit
         run: |
           git config user.name "chips-bot"
